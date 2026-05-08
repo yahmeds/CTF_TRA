@@ -1,3 +1,5 @@
+import base64
+
 from flask import Flask, Response, render_template
 
 app = Flask(__name__)
@@ -17,6 +19,17 @@ def robots():
 @app.route("/private/draft-2024-11-09")
 def hidden_draft():
     return render_template("draft.html")
+
+
+@app.route("/private/archive")
+def archive():
+    cleartext = (
+        "Reminder to self: base64 is not encryption. "
+        "If you can read this, you already knew that. "
+        "traces{b4s3_s1xty_f0ur_1s_n0t_crypt0}"
+    )
+    payload = base64.b64encode(cleartext.encode()).decode()
+    return render_template("archive.html", payload=payload)
 
 
 if __name__ == "__main__":
