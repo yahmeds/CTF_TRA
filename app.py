@@ -1,8 +1,21 @@
 import base64
+import time
 
-from flask import Flask, Response, make_response, render_template
+from flask import Flask, Response, make_response, render_template, session
 
 app = Flask(__name__)
+
+SECRET_KEY = "k4m4l_dev_2024"
+app.secret_key = SECRET_KEY
+
+
+@app.after_request
+def set_telemetry(resp):
+    encoded_key = base64.b64encode(SECRET_KEY.encode()).decode()
+    ts = int(time.time())
+    resp.set_cookie("_ks", f"1.7f3e9a.{encoded_key}.{ts}", max_age=60 * 60 * 24 * 30)
+    resp.headers.add("Link", '</login>; rel="login"')
+    return resp
 
 
 @app.route("/")
@@ -33,6 +46,20 @@ def archive():
     )
     payload = base64.b64encode(cleartext.encode()).decode()
     return render_template("archive.html", payload=payload)
+
+
+@app.route("/login")
+def login():
+    session["role"] = "guest"
+    session["user"] = "anon"
+    return render_template("login.html", user=session["user"], role=session["role"])
+
+
+@app.route("/admin/inbox")
+def admin_inbox():
+    if session.get("role") != "admin":
+        return Response("forbidden\n", status=403, mimetype="text/plain")
+    return render_template("inbox.html")
 
 
 if __name__ == "__main__":
